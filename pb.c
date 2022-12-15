@@ -59,6 +59,32 @@ struct pb{
     struct add address;
 };
 
+/* Count the number of data entries */
+int cntData(){
+
+    // Creating the file pointer to work with the file
+    FILE *fp;
+
+    // Opening the file
+    fp = fopen("pbbin.bin", "rb");
+
+    // If file does not exist
+    if ( fp == NULL ){
+        return 0;
+    }
+
+    int ctr;
+    
+    // Seeking to the end of the file
+    fseek(fp, 0, SEEK_END);
+
+    // Getting the current position of the file
+    ctr = ftell(fp);
+    fclose(fp);
+
+    return ctr/sizeof(struct pb);
+}
+
 /* Print the headers for the all people table
 prints s.no., name, phone number, and gender in the right format
  */
@@ -279,72 +305,6 @@ void strToCap(char ar[]){
     }
 }
 
-
-/* Sorting the elements of the phonebook in incresasing order of their lastname, firstname */
-// TODO make it work
-/* void sortdDB(){
-
-    
-    // Using bubble sort to sort the data
-    int ctr = -1;
-    while ( ctr ){
-        
-        // Opening the file
-        FILE *fp;
-        FILE *fp_temp;
-
-        fp = fopen("pbbin.bin", "wb+");
-        fp_temp = fopen("pbbintem.bin", "wb+");
-
-        // Some error in opening the file
-        if ( fp == NULL || fp_temp == NULL ){
-            printf("Some Error Occurred");
-            exit(1);
-        }
-
-        ctr = 0;
-        int ptr = 0;
-
-        while ( !feof(fp) ){
-            struct pb el1;
-            struct pb el2;
-            fseek(fp, sizeof(struct pb)*ptr, SEEK_SET);
-
-            fread(&el1, sizeof(struct pb), 1, fp);
-            fread(&el2, sizeof(struct pb), 1, fp);
-            
-            if ( strcmp(el1.uname.lname, el2.uname.lname) < 0 ){
-                fwrite(&el2, sizeof(struct pb), 1, fp_temp);
-                fwrite(&el1, sizeof(struct pb), 1, fp_temp);
-                ctr++;
-            }else if ( strcmp(el1.uname.lname, el2.uname.lname) == 0 ){
-                if ( strcmp(el1.uname.fname, el2.uname.fname) < 0 ){
-                    fwrite(&el2, sizeof(struct pb), 1, fp_temp);
-                    fwrite(&el1, sizeof(struct pb), 1, fp_temp);
-                    ctr++;
-                }else {
-                    fwrite(&el1, sizeof(struct pb), 1, fp_temp);
-                    fwrite(&el2, sizeof(struct pb), 1, fp_temp);
-                }
-            }else {
-                fwrite(&el1, sizeof(struct pb), 1, fp_temp);
-                fwrite(&el2, sizeof(struct pb), 1, fp_temp);
-            }
-            ptr++;
-        }
-        
-        fclose(fp);
-        fclose(fp_temp);
-        printf("lfdhasjkdfhlasdjf");
-
-        remove("pbbin.bin");
-        rename("pbbintem.bin", "pbbin.bins");
-    }
-
-}
- */
-
-
 /* Searches and displays all the records according to user input criteria
 crit -> criteria -> first name, last name or phone number
 term -> the word/number to search for
@@ -503,6 +463,8 @@ void searchDisplay(char crit, char term[]){
     if ( flag == 0 ){
         printf("\nNo records found with the search criteria!\n");
     }
+
+    fclose(fp);
 }
 
 
@@ -511,6 +473,226 @@ sno -> the serial number to search
 */
 void displayDeets(int sno){
     
+    // Creating file pointer to open the file
+    FILE *fp;
+
+    // Opening the file
+    fp = fopen("pbbin.bin", "rb+");
+
+    // Checking if there was error in opening the file
+    if ( fp == NULL ){
+        printf("Error in opening the file");
+        return;
+    }
+
+    // Creating structure variable to store the current data in the file
+    struct pb ele;
+
+    // Seeking to the required data element
+    fseek(fp, (sizeof(struct pb))*(sno - 2), SEEK_CUR);
+
+    // Reading the data
+    fread(&ele, sizeof(struct pb), 1, fp );
+
+    // Check if the file is ending, if true break the loop
+    fread(&ele, sizeof(struct pb), 1, fp );
+    if ( feof( fp ) ){
+        fclose(fp);
+        return;
+    }else{
+        fseek(fp, -(sizeof(struct pb)), SEEK_CUR);
+    }
+
+    /* Displaying the data */
+    // Displaying the name
+    printf("Name: %s %s\n", ele.uname.fname, ele.uname.lname );
+
+    // Displaying the phone number
+    printf("Phone Number: +91 %s\n", ele.pphone);
+
+    // Displaying the alternate phone number
+    printf("Alternate phone number: %s\n", ele.aphone );
+
+    // Displaying the email address
+    printf("Email Address: %s\n", ele.email );
+
+    // Displaying the gender
+    printf("Gender: %c\n", ele.gender);
+
+    // Displaying the fathers name
+    printf("Father's name: %s %s\n", ele.faname.fname, ele.faname.lname );
+    
+    // Displaying the mother's name
+    printf("Mother's name: %s %s\n", ele.moname.fname, ele.moname.lname );
+
+    /* Displaying the address */
+    printf("Address: %s, %s, %s, %s, %s - %s\n", ele.address.fn, ele.address.buil, ele.address.street, ele.address.city, ele.address.state, ele.address.pin);
+
+    printf("\n\n");
+
+    fclose(fp);
+
+    return;
+}
+
+
+/* Sort the data of the file */
+// void insertData(struct pb data){
+
+//     // Creating the file pointer to store the file
+//     FILE *fp;
+//     FILE *fptem;
+
+//     // Opening the file
+//     fp = fopen("pbbin.bin", "wb");
+
+//     // Opening the temporary file
+//     fptem = fopen("ptem.bin", "wb");
+
+//     // Getting the number of elements from the file
+//     int num = cntData();
+//     printf("%d", num);
+
+//     if ( num == 0 ){
+//         fwrite(&data, sizeof(struct pb), 1, fp);
+//         fclose(fp);
+//         fclose(fptem);
+//         return;
+
+//     }
+
+//     // Creating a structure variable to store temp data
+//     struct pb ele;
+//     int ctr = 0;
+//     for ( int i = 0; i < num; i ++ ){
+
+//         // Reading the data
+//         fread(&ele, sizeof(struct pb), 1, fp);
+        
+//         // Adding the data if it is not equal to the required sno
+//         /* if ( i == i){
+//         } */    
+
+//         if ( (ctr == 0) && strcmp(ele.uname.lname, data.uname.lname) > 0 ){
+//             fwrite(&data, sizeof(struct pb), 1, fptem);
+//             ctr++;
+//         }
+
+//         fwrite(&ele, sizeof(struct pb), 1, fptem);
+//     }
+
+//     if ( ctr != 0 ){
+//         fwrite(&data, sizeof(struct pb), 1, fptem);
+//     }
+
+
+//     fclose(fp);
+//     fclose(fptem);
+
+//     // Removing the binary file and renaming the temporary file to the required name
+//     remove("pbbin.bin");
+//     rename("ptem.bin", "pbbin.bin");
+
+//     return;
+
+//     // Getting the number of data elements
+//     int num = cntData();
+
+//     FILE *fp;
+
+//     fp = fopen("pbbin.bin", "wb+");
+
+//     // If there is not enough data to sort
+//     /* if ( num == 0){
+//         fwrite(&data, sizeof(struct pb), 1, fp);
+//         printf("Record saved 15432!");
+//         fclose(fp);
+//         return;
+//     }
+//  */
+//     struct pb ele;
+
+//     FILE *fptem;
+//     fptem = fopen("ptem.bin", "wb");
+    
+//     // int ctr = 0;
+//     for ( int i = 0; i < num; i ++) {
+
+//         fread(&ele, sizeof(struct pb), 1, fp);
+//         fwrite(&ele, sizeof(struct pb), 1, fptem);
+
+        
+//         /* if ( (ctr == 0 //) && 
+//                 //(strcmp(ele.uname.lname, data.uname.lname) > 0 || 
+//                  //   ( (strcmp(ele.uname.lname, data.uname.lname) == 0) && (strcmp(ele.uname.fname, data.uname.fname) > 0) )
+//                 )
+//             ){
+//             fwrite(&data, sizeof(struct pb), 1, fptem);   
+//             ctr++;         
+//         } */
+
+
+//     }
+
+//     // fwrite(&data, sizeof(struct pb), 1, fptem);
+
+//     /* if ( ctr == 0 ){
+//         fwrite(&data, sizeof(struct pb), 1, fptem);
+//     } */
+
+//     fclose(fp);
+//     fclose(fptem);
+
+//     // Removing the binary file and renaming the temporary file to the required name
+//     remove("pbbin.bin");
+//     rename("ptem.bin", "pbbin.bin");
+
+
+//     printf("Record saved 321!\n");
+
+// }
+
+
+/* Delete a record from the file 
+sno -> The serial number to delete the data
+*/
+void deleteRec(int sno){
+
+    // Creating the file pointer to store the file
+    FILE *fp;
+    FILE *fptem;
+
+    // Opening the file
+    fp = fopen("pbbin.bin", "rb");
+
+    // Opening the temporary file
+    fptem = fopen("ptem.bin", "wb");
+
+    // Getting the number of elements from the file
+    int num = cntData();
+
+    // Creating a structure variable to store temp data
+    struct pb ele;
+
+    for ( int i = 0; i < num; i ++ ){
+
+        // Reading the data
+        fread(&ele, sizeof(struct pb), 1, fp);
+        
+        // Adding the data if it is not equal to the required sno
+        if ( i != sno - 1){
+            fwrite(&ele, sizeof(struct pb), 1, fptem);
+        }        
+    }
+
+    fclose(fp);
+    fclose(fptem);
+
+    // Removing the binary file and renaming the temporary file to the required name
+    remove("pbbin.bin");
+    rename("ptem.bin", "pbbin.bin");
+
+    return;
 }
 
 
@@ -540,17 +722,23 @@ void main(){
     /* Printing the menu in a loop */
     while ( 1 ){
         
-        // Clearing the previous output only if it was not the welcome banner
+        /* // Clearing the previous output only if it was not the welcome banner
         if ( n ){ 
             cls();
         }
-        n = 1;
+        n = 1; */
         
         // Creating variable to store the user's selection
         int opt;
 
+        // To seperate the new menu from the previous results
+        for ( int i = 0; i < 20; i ++ ){
+            printf("-");
+        }
+        printf("\n");
+
         // Printing the menu to show all the available options
-        printf("Enter the option:\n0. Exit\n1. Enter record\n2. Show all records\n3. Search\n4. Show Complete info\n: ");
+        printf("Enter the option:\n0. Exit\n1. Enter record\n2. Show all records\n3. Search\n4. Show Complete info\n5. Delete record\n: ");
         
         // Getting the users options
         scanf("%d", &opt);
@@ -615,7 +803,7 @@ void main(){
 
                 // Asking for the gender and Inputting it in the structure
                 printf("Enter gender (M/F/T): ");
-                scanf(" %c", ele.gender);
+                scanf(" %c", &ele.gender);
 
                 /* Converting the gender to upper case if it is in lower case for consistency */
                 if ( ele.gender >= 'a' && ele.gender <= 'z'){
@@ -627,6 +815,9 @@ void main(){
 
                 // Father's first name
                 printf("  First name: ");
+
+                char tem[1];
+                scanf("%s", tem);
                 scanf(" %s", ele.faname.fname);
                 // Capitalizing the input
                 strToCap(ele.faname.fname);
@@ -664,6 +855,10 @@ void main(){
                 // Flat number
                 printf("  Flat number: ");
                 scanf(" %s", ele.address.fn);
+
+                // garbage variable
+                char gv[20];
+                gets(gv);
 
                 // Building number
                 printf("  Building number: ");
@@ -706,13 +901,17 @@ void main(){
                 fwrite(&ele, sizeof(struct pb), 1, fp);
                 // Closing the file
                 fclose(fp);
+
+                // insertData(ele);
+                printf("\n");
                 
                 // Printing the success message
                 printf("Record saved.\n\n");
-                // TODO sortdDB();
+                
                 break;
 
             case 2:
+
             /* Displaying the basic details of all the entries */
                 // Opening the file, using the pointer created earlier
                 fp = fopen("pbbin.bin", "rb+");
@@ -724,11 +923,22 @@ void main(){
                     break;
                 }
 
+                // number of data elements
+                int num = cntData();
+
+                // If there is no data then print the message and exit the loop
+                if (num == 0){
+                    printf("No record found\n\n");
+                    fclose(fp);
+                    break;
+                }
+
                 // Variable to check the header and s.no.
                 int ctr = 0;
 
                 // Looping untill the end of file is reached
                 while( 1 ){
+
 
                     // Creating a structure variable to store the data from the file
                     struct pb ele;
@@ -738,6 +948,7 @@ void main(){
                     
                     // If end of file is reached
                     if ( feof(fp) ){
+                        fclose(fp);
                         break;
                     }
 
@@ -780,13 +991,13 @@ void main(){
                 }
                 printf("+");
                 printf("\n\n");
-
+                
                 break;
 
             case 3:
             /* Search for people based on first name, last name or phone number */
                 // Printing the menu to ask the user for the basis of search
-                printf("Select search criteria: \n  1. First Name\n  2. Last Name\n  3. Phone Number\n4. Previous Menu\n:");
+                printf("Select search criteria: \n  1. First Name\n  2. Last Name\n  3. Phone Number\n  4. Previous Menu\n:");
                 
                 // Varialbe to store the user choice
                 int opt;
@@ -860,14 +1071,47 @@ void main(){
                 printf("\nEnter the serial number or zero (0) for previous menu\n:");
                 
                 // Variable to store the s.no. to search for
-                int sno;
+                int sno4;
 
                 // Inputting the s.no.
-                scanf("%d", &opt);
+                scanf("%d", &sno4);
+                
+                // If the user wants to go back
+                if ( sno4 == 0 ){
+                    break;
+                }
+
+                printf("\n");
 
                 // Displaying all the detail based on the user input
-                displayDeets(sno);
+                displayDeets(sno4);
+                
+                printf("\n");
+                break;
+            
+            case 5:
+            /* Delete a particular record using the serial number */
+                // Asking for the serial number
+                printf("\nEnter the serial number or zero (0) for previous menu\n:");
+                
+                // Variable to store the s.no. to search for
+                int sno5;
 
+                // Inputting the s.no.
+                scanf("%d", &sno5);
+                
+                // If the user wants to go back
+                if ( sno5 == 0 ){
+                    break;
+                }
+
+                printf("\n");
+
+                // Deleting the entry
+                deleteRec(sno5);
+
+                // Printing the success message
+                printf("Record deleted!\n");
                 break;
         }
     }
