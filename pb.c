@@ -2,6 +2,7 @@
 #include <stdlib.h>  // Standard Library
 #include <string.h>  // To perform operations on strings
 
+
 /* Declaring a structure to store the address 
 add -> address
 fn -> flat number
@@ -32,6 +33,7 @@ struct name{
     char lname[20];
 };
 
+
 /* 
 Declaring a structure which will help to store the data of the user.
 pb -> phonebook
@@ -59,6 +61,7 @@ struct pb{
     struct add address;
 };
 
+
 /* Count the number of data entries */
 int cntData(){
 
@@ -73,17 +76,24 @@ int cntData(){
         return 0;
     }
 
-    int ctr;
+    // Variable to store the last position
+    long int ctr;
     
     // Seeking to the end of the file
     fseek(fp, 0, SEEK_END);
 
+
     // Getting the current position of the file
     ctr = ftell(fp);
+
+    // Close the file
     fclose(fp);
 
-    return ctr/sizeof(struct pb);
+    // Return the number of elements
+    // Number of elements = total size of file / size of each data element
+    return ((int) ctr)/sizeof(struct pb);
 }
+
 
 /* Print the headers for the all people table
 prints s.no., name, phone number, and gender in the right format
@@ -91,6 +101,7 @@ prints s.no., name, phone number, and gender in the right format
 void printTableHeader(){
 
     /* Top line */ 
+
     printf("+");
     // Above s.no.
     for ( int i = 0; i < 7; i ++ ){
@@ -305,6 +316,7 @@ void strToCap(char ar[]){
     }
 }
 
+
 /* Searches and displays all the records according to user input criteria
 crit -> criteria -> first name, last name or phone number
 term -> the word/number to search for
@@ -325,7 +337,7 @@ void searchDisplay(char crit, char term[]){
     struct pb el;
 
     int ctr = 1; // To print the s.no.
-    int flag = 0; // To print the header banner if record found
+    int flag = 0; // To print the header banner only once, if record found
     
     /* Searching on the basis of first name */
     if ( crit == 'f' ){
@@ -344,6 +356,8 @@ void searchDisplay(char crit, char term[]){
 
                 // If first data element found, print the headers
                 if ( flag == 0 ){
+
+                    // Printing the header for the table
                     printTableHeaderAll();
 
                     // To prevent printing headers after every match
@@ -464,6 +478,7 @@ void searchDisplay(char crit, char term[]){
         printf("\nNo records found with the search criteria!\n");
     }
 
+    // Closing the file after displaying the data
     fclose(fp);
 }
 
@@ -504,6 +519,7 @@ void displayDeets(int sno){
     }
 
     /* Displaying the data */
+
     // Displaying the name
     printf("Name: %s %s\n", ele.uname.fname, ele.uname.lname );
 
@@ -530,12 +546,34 @@ void displayDeets(int sno){
 
     printf("\n\n");
 
+    // Closing the file after displaying all the details
     fclose(fp);
 
     return;
 }
 
-/* Delete a record from the file 
+
+/* Sort the data of the file */
+void insertData(struct pb data){
+
+    // Creating the file pointer to store the file
+    FILE *fp;
+
+    // Opening the file
+    fp = fopen("pbbin.bin", "ab");
+    fwrite(&data, sizeof(struct pb), 1, fp);
+    
+    // Closing the file as it is no longer needed
+    fclose(fp);
+
+    return;
+
+}
+
+
+/* Delete a record from the file by creating a new temp file and copying all the data
+ except the data to delete and then renaming the temp file to the actual file after deleting it
+
 sno -> The serial number to delete the data
 */
 void deleteRec(int sno){
@@ -556,6 +594,7 @@ void deleteRec(int sno){
     // Creating a structure variable to store temp data
     struct pb ele;
 
+    // Loop to copy all the records from the current file to a temporary file
     for ( int i = 0; i < num; i ++ ){
 
         // Reading the data
@@ -567,6 +606,7 @@ void deleteRec(int sno){
         }        
     }
 
+    // Closing the files
     fclose(fp);
     fclose(fptem);
 
@@ -603,12 +643,6 @@ void main(){
 
     /* Printing the menu in a loop */
     while ( 1 ){
-        
-        /* // Clearing the previous output only if it was not the welcome banner
-        if ( n ){ 
-            cls();
-        }
-        n = 1; */
         
         // Creating variable to store the user's selection
         int opt;
@@ -652,12 +686,18 @@ void main(){
         }
 
         /* User does not want to exit */
-        // Creating the file pointer
+
+        // Creating the file pointer to make changes to the required file
         FILE *fp;
         
         switch ( opt ){
             case 1:
+
             /* Entering new record */
+
+                // Clearing the screen
+                cls();
+
                 // Creating new phonebook element
                 struct pb ele;
                 printf("\n");
@@ -698,8 +738,11 @@ void main(){
                 // Father's first name
                 printf("  First name: ");
 
+                // Creating a temp variable to input the data as the new line character
+                // was autmatically being input
                 char tem[1];
                 scanf("%s", tem);
+                
                 scanf(" %s", ele.faname.fname);
                 // Capitalizing the input
                 strToCap(ele.faname.fname);
@@ -738,7 +781,7 @@ void main(){
                 printf("  Flat number: ");
                 scanf(" %s", ele.address.fn);
 
-                // garbage variable
+                // garbage variable to store the new line character automatically inputted
                 char gv[20];
                 gets(gv);
 
@@ -768,23 +811,8 @@ void main(){
                 printf("  Pincode: ");
                 scanf(" %s", ele.address.pin);
 
-
-                // Storing the data in a binary file
-                // Opening the binary file in append mode, using the pointer created earlier
-                fp = fopen("pbbin.bin", "ab+");
-                
-                // If there is an error in opening the file
-                if ( fp == NULL ){
-                    printf("Some Error Occurred");
-                    exit(1);
-                }
-
-                // Writing the data to the file
-                fwrite(&ele, sizeof(struct pb), 1, fp);
-                // Closing the file
-                fclose(fp);
-
-                // insertData(ele);
+                // Inserting the data to the file
+                insertData(ele);
                 printf("\n");
                 
                 // Printing the success message
@@ -795,6 +823,19 @@ void main(){
             case 2:
 
             /* Displaying the basic details of all the entries */
+                
+                // Clearing the screen
+                cls();
+
+                // number of data elements
+                int num = cntData();
+
+                // If there is no data then print the message and exit the loop
+                if (num == 0){
+                    printf("No record found\n\n");
+                    break;
+                }
+                
                 // Opening the file, using the pointer created earlier
                 fp = fopen("pbbin.bin", "rb+");
                 printf("\n");
@@ -805,22 +846,11 @@ void main(){
                     break;
                 }
 
-                // number of data elements
-                int num = cntData();
-
-                // If there is no data then print the message and exit the loop
-                if (num == 0){
-                    printf("No record found\n\n");
-                    fclose(fp);
-                    break;
-                }
-
                 // Variable to check the header and s.no.
                 int ctr = 0;
 
                 // Looping untill the end of file is reached
                 while( 1 ){
-
 
                     // Creating a structure variable to store the data from the file
                     struct pb ele;
@@ -877,7 +907,11 @@ void main(){
                 break;
 
             case 3:
+            
             /* Search for people based on first name, last name or phone number */
+                // Clearing the screen 
+                cls();
+
                 // Printing the menu to ask the user for the basis of search
                 printf("Select search criteria: \n  1. First Name\n  2. Last Name\n  3. Phone Number\n  4. Previous Menu\n:");
                 
@@ -949,6 +983,10 @@ void main(){
             
             case 4:
             /* Display all the details for a entry by S.No. */
+
+                // Clearing the screen
+                cls();
+
                 // Asking the user for the s.no. to search for
                 printf("\nEnter the serial number or zero (0) for previous menu\n:");
                 
@@ -973,6 +1011,9 @@ void main(){
             
             case 5:
             /* Delete a particular record using the serial number */
+                // Clearing the screen
+                cls();
+
                 // Asking for the serial number
                 printf("\nEnter the serial number or zero (0) for previous menu\n:");
                 
