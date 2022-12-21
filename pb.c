@@ -553,7 +553,7 @@ void displayDeets(int sno){
 }
 
 
-/* Sort the data of the file */
+/* Inser the data in the file */
 void insertData(struct pb data){
 
     // Creating the file pointer to store the file
