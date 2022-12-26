@@ -487,6 +487,12 @@ void searchDisplay(char crit, char term[]){
 sno -> the serial number to search
 */
 void displayDeets(int sno){
+
+    // If the data does not exist
+    if ( sno > cntData()){
+        printf("Not found\n");
+        return;
+    }
     
     // Creating file pointer to open the file
     FILE *fp;
@@ -504,19 +510,11 @@ void displayDeets(int sno){
     struct pb ele;
 
     // Seeking to the required data element
-    fseek(fp, (sizeof(struct pb))*(sno - 2), SEEK_CUR);
+    fseek(fp, (sizeof(struct pb))*(sno - 1), SEEK_SET);
 
     // Reading the data
     fread(&ele, sizeof(struct pb), 1, fp );
 
-    // Check if the file is ending, if true break the loop
-    fread(&ele, sizeof(struct pb), 1, fp );
-    if ( feof( fp ) ){
-        fclose(fp);
-        return;
-    }else{
-        fseek(fp, -(sizeof(struct pb)), SEEK_CUR);
-    }
 
     /* Displaying the data */
 
@@ -737,11 +735,6 @@ void main(){
 
                 // Father's first name
                 printf("  First name: ");
-
-                // Creating a temp variable to input the data as the new line character
-                // was autmatically being input
-                char tem[1];
-                scanf("%s", tem);
                 
                 scanf(" %s", ele.faname.fname);
                 // Capitalizing the input
